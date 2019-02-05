@@ -18,31 +18,34 @@ public class MazeViewer : MonoBehaviour {
     List<GameObject> UITrail;
     List<GameObject> UIMovesIndicator;
     List<GameObject> UIEmptyIndicator;
+    bool initFlag;
 
     void Start() {
-        UIMaze = new HashSet<Vector2Int>();
-        UITrail = new List<GameObject>();
-        UIMovesIndicator = new List<GameObject>();
-        UIEmptyIndicator = new List<GameObject>();
-        // GameObject test = Instantiate(whiteCell, this.gameObject.transform);
-        // test.GetComponent<RectTransform>().anchoredPosition = new Vector2(150,150);
-        // test.name = new Vector2Int(1,1).ToString();
-    }
-
-    void Update() {
-        if(Input.GetKeyDown(KeyCode.R)) {
-            RefreshMaze();
+        //if objects haven't been initialized
+        if(initFlag) {
+            init();
         }
     }
 
+    void Update() {
+        //
+    }
+
     void init() {
+        //function for initializing objects.
+        //may be necessary because other scripts may call this script before
+        //this script's Start() function is called.
         UIMaze = new HashSet<Vector2Int>();
         UITrail = new List<GameObject>();
         UIMovesIndicator = new List<GameObject>();
         UIEmptyIndicator = new List<GameObject>();
+        initFlag = true;
     }
 
     void RefreshMaze() {
+        //instantiates blank square images to represent the current maze.
+        //copies all maze cells to array and instantiates them iteratively.
+        //instantiates only cells that have not already been instantiated.
         Vector2Int [] cells = new Vector2Int[MazeObject.maze.Count];
         MazeObject.maze.CopyTo(cells);
         foreach(Vector2Int c in cells) {
@@ -55,10 +58,13 @@ public class MazeViewer : MonoBehaviour {
                 newCell.name = c.ToString();
             }
         }
-        // print("Refreshed Screen, " + MazeObject.maze.Count + " cells on screen.");
     }
 
     void RefreshTrail() {
+        //instantiates green square images to represent current trail.
+        //copies trail cells to array and instantiates them.
+        //since trail may have been erased during generation,
+        //all trail cell sprites must be destroyed before instantiating the updated trail.
         Vector2Int [] cells = new Vector2Int[MazeObject.trail.Count];
         MazeObject.trail.CopyTo(cells);
         foreach(GameObject go in UITrail) {
@@ -67,6 +73,7 @@ public class MazeViewer : MonoBehaviour {
         UITrail.Clear();
         foreach(Vector2Int c in cells) {
             GameObject newCell;
+            //different cell color for current head and previous head cells
             if(c == MazeObject.trailHead) {
                 newCell = Instantiate(redCell, this.gameObject.transform);
             }
@@ -85,6 +92,8 @@ public class MazeViewer : MonoBehaviour {
     }
 
     void RefreshMoves() {
+        //sprites for representing the current valid cells for next move.
+        //current instances are destroyed before instantiating updated sprites
         foreach(GameObject go in UIMovesIndicator) {
             Destroy(go);
         }
@@ -99,6 +108,9 @@ public class MazeViewer : MonoBehaviour {
     }
 
     void RefreshEmpty() {
+        //instantiates sprites representing empty space
+        //called once before any other cells are created.
+        //other cells that are created are layered on top of these.
         Vector2Int [] cells = new Vector2Int[MazeObject.notMaze.Count];
         MazeObject.notMaze.CopyTo(cells);
         foreach(GameObject go in UIEmptyIndicator) {
@@ -114,36 +126,4 @@ public class MazeViewer : MonoBehaviour {
             UIEmptyIndicator.Add(newCell);
         }
     }
-
-    /*
-    protected override void OnPopulateMesh(VertexHelper vh) {
-        corner1.x *= rectTransform.rect.width;
-        corner1.y *= rectTransform.rect.height;
-        corner2.x *= rectTransform.rect.width;
-        corner2.y *= rectTransform.rect.height;
-
-        vh.Clear();
-
-        UIVertex vert = UIVertex.simpleVert;
-
-        vert.position = new Vector2(corner1.x, corner1.y);
-        vert.color = color;
-        vh.AddVert(vert);
-
-        vert.position = new Vector2(corner1.x, corner2.y);
-        vert.color = color;
-        vh.AddVert(vert);
-
-        vert.position = new Vector2(corner2.x, corner2.y);
-        vert.color = color;
-        vh.AddVert(vert);
-
-        vert.position = new Vector2(corner2.x, corner1.y);
-        vert.color = color;
-        vh.AddVert(vert);
-
-        vh.AddTriangle(0, 1, 2);
-        vh.AddTriangle(2, 3, 0);
-    }
-    */
 }
