@@ -11,13 +11,13 @@ public class MazeViewer : MonoBehaviour {
     public GameObject orangeCell;
     public GameObject purpleMiniCell;
     public GameObject pinkMiniFadeCell;
-    public int pixelOffsetFromLeft;
-    public int pixelOffsetFromBottom;
-    public int pixelCellWidth;
     HashSet<Vector2Int> UIMaze;
     List<GameObject> UITrail;
     List<GameObject> UIMovesIndicator;
     List<GameObject> UIEmptyIndicator;
+    float pixelCellWidth;
+    float pixelOffsetFromLeft;
+    float pixelOffsetFromBottom;
     bool initFlag;
 
     void Start() {
@@ -26,6 +26,11 @@ public class MazeViewer : MonoBehaviour {
             init();
         }
     }
+
+    // void OnGUI() {
+    //     RectTransform rectTransform = GetComponent<RectTransform>();
+    //     GUI.Label(new Rect(150, 150, 320, 480), "Rect : " + rectTransform.rect);
+    // }
 
     void Update() {
         //
@@ -39,6 +44,11 @@ public class MazeViewer : MonoBehaviour {
         UITrail = new List<GameObject>();
         UIMovesIndicator = new List<GameObject>();
         UIEmptyIndicator = new List<GameObject>();
+        pixelCellWidth =
+            GetComponent<RectTransform>().rect.height /
+            GetComponent<WilsonMaze>().sizeY;
+        pixelOffsetFromLeft = pixelCellWidth;
+        pixelOffsetFromBottom = pixelCellWidth;
         initFlag = true;
     }
 
@@ -52,7 +62,9 @@ public class MazeViewer : MonoBehaviour {
             if(!UIMaze.Contains(c)) {
                 UIMaze.Add(c);
                 GameObject newCell = Instantiate(whiteCell, this.gameObject.transform);
-                newCell.GetComponent<RectTransform>().anchoredPosition =
+                RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
+                newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
+                newCellTrans.anchoredPosition =
                     new Vector2((pixelOffsetFromLeft + ((c.x - 1) * pixelCellWidth)),
                                 pixelOffsetFromBottom + ((c.y - 1) * pixelCellWidth));
                 newCell.name = c.ToString();
@@ -83,6 +95,8 @@ public class MazeViewer : MonoBehaviour {
             else {
                 newCell = Instantiate(greenCell, this.gameObject.transform);
             }
+            RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
+            newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
             newCell.GetComponent<RectTransform>().anchoredPosition =
                 new Vector2((pixelOffsetFromLeft + ((c.x - 1) * pixelCellWidth)),
                             pixelOffsetFromBottom + ((c.y - 1) * pixelCellWidth));
@@ -99,6 +113,8 @@ public class MazeViewer : MonoBehaviour {
         }
         foreach(Vector2Int v in MazeObject.moves) {
             GameObject indi = Instantiate(purpleMiniCell, this.gameObject.transform);
+            RectTransform newCellTrans = indi.GetComponent<RectTransform>();
+            newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
             indi.GetComponent<RectTransform>().anchoredPosition =
                 new Vector2((pixelOffsetFromLeft + ((v.x - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F)),
                             pixelOffsetFromBottom + ((v.y - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F));
@@ -119,6 +135,8 @@ public class MazeViewer : MonoBehaviour {
         UIEmptyIndicator.Clear();
         foreach(Vector2Int c in cells) {
             GameObject newCell = Instantiate(pinkMiniFadeCell, this.gameObject.transform);
+            RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
+            newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
             newCell.GetComponent<RectTransform>().anchoredPosition =
                 new Vector2((pixelOffsetFromLeft + ((c.x - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F)),
                             pixelOffsetFromBottom + ((c.y - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F));

@@ -140,6 +140,7 @@ public class WilsonMaze : MonoBehaviour {
             trailHeadPrev = trailHead;
             trailHead = moves[Random.Range(0,moves.Count)];
             //if new head is part of current trail, erase the trail
+            //TO DO: change so that it only erased trail up to point where loop was created
             if(trail.Contains(trailHead)) {
                 trail.Clear();
                 if(debugLog) print(trailHead.ToString() + " Loop Erased.");
