@@ -11,6 +11,7 @@ public class WilsonMaze : MonoBehaviour {
     public float cellDensity;
     public float autoStepInterval;
     public bool stopAuto;
+    public Dictionary<Vector2Int,WilsonCell> linkedMaze;
     public HashSet<Vector2Int> maze;
     public HashSet<Vector2Int> trail;
     public HashSet<Vector2Int> notMaze;
@@ -177,5 +178,23 @@ public class WilsonMaze : MonoBehaviour {
         //update UI representation of trail and move indicators
         gameObject.BroadcastMessage("RefreshTrail");
         gameObject.BroadcastMessage("RefreshMoves");
+    }
+}
+
+public class WilsonCell {
+    public Vector2Int vec;
+    public WilsonCell next;
+
+    WilsonCell(Vector2Int v) {
+        vec = v;
+    }
+    WilsonCell(Vector2 v) {
+        vec = new Vector2Int((int)v.x, (int)v.y);
+    }
+    WilsonCell(int x, int y) {
+        vec = new Vector2Int(x,y);
+    }
+    WilsonCell(float x, float y) {
+        vec = new Vector2Int((int)x, (int)y);
     }
 }
