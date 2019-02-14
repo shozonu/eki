@@ -11,13 +11,14 @@ public class WilsonMaze : MonoBehaviour {
     public float cellDensity;
     public float autoStepInterval;
     public bool stopAuto;
-    public Dictionary<Vector2Int,WilsonCell> linkedMaze;
-    public HashSet<Vector2Int> maze;
-    public HashSet<Vector2Int> trail;
-    public HashSet<Vector2Int> notMaze;
-    public Vector2Int trailHead;
-    public Vector2Int trailHeadPrev;
-    public List<Vector2Int> moves;
+    public HashSet<Vector2Int> mazeCoords; //for checking occupancy of vectors
+    public HashSet<WilsonCell> maze; //keeping references of objects
+    public HashSet<Vector2Int> notMaze; //for checking occupancy of non-used vecs
+    public HashSet<Vector2Int> trail; //for checking occupancy of trail vectors
+    public List<Vector2Int> orderedTrail; //for keeping order of trail vectors
+    public Vector2Int trailHead; //keep track of current vector in step
+    public Vector2Int trailHeadPrev; //keep track of last vector in step
+    public List<Vector2Int> moves; //list of valid adjacent vectors in step
     float maxCells;
     //when adding a trail to the maze,
     //use notMaze.ExceptWith(trail) to remove walked cells from notMaze
@@ -26,9 +27,11 @@ public class WilsonMaze : MonoBehaviour {
 
     void Start() {
         gameObject.BroadcastMessage("init"); //ensure MazeViewer objects are initialized
-        maze = new HashSet<Vector2Int>();
+        maze = new HashSet<WilsonCell>();
+        mazeCoords = new HashSet<Vector2Int>();
         notMaze = new HashSet<Vector2Int>();
         trail = new HashSet<Vector2Int>();
+        orderedTrail = new List<Vector2Int>();
         moves = new List<Vector2Int>();
         Random.InitState(seed);
 
@@ -47,7 +50,8 @@ public class WilsonMaze : MonoBehaviour {
         if(maze.Count < 1) {
             Vector2Int initial =
                 new Vector2Int(Random.Range(0,sizeX - 1), Random.Range(0,sizeY - 1));
-            maze.Add(initial);
+            maze.Add(new WilsonCell(initial));
+            mazeCoords.Add(initial);
             notMaze.Remove(initial);
             //update UI representation of maze
         gameObject.BroadcastMessage("RefreshMaze");
@@ -104,6 +108,7 @@ public class WilsonMaze : MonoBehaviour {
             trailHead = arr[Random.Range(0, arr.Length - 1)];
             trailHeadPrev = trailHead;
             trail.Add(trailHead);
+            orderedTrail.Add(trailHead);
             if(debugLog) {
                 print("First step in new trail.");
                 print(trailHead);
@@ -144,15 +149,31 @@ public class WilsonMaze : MonoBehaviour {
             //TO DO: change so that it only erased trail up to point where loop was created
             if(trail.Contains(trailHead)) {
                 trail.Clear();
+                orderedTrail.Clear();
                 if(debugLog) print(trailHead.ToString() + " Loop Erased.");
                 stopAuto = false;
                 return;
             }
             //if new head is part of existing maze, add trail to maze
-            else if(maze.Contains(trailHead)) {
-                notMaze.ExceptWith(trail);
-                maze.UnionWith(trail);
+            else if(mazeCoords.Contains(trailHead)) {
+                notMaze.ExceptWith(trail); //remove vectors from notMaze
+                mazeCoords.UnionWith(trail); //add trail to mazeCoords
+                WilsonCell prevCell = new WilsonCell(orderedTrail[0]);
+                //add cells to maze from trail, and forward-link cells
+                for(int i = 0; i < trail.Count; i++) {
+                    if(i > 0) {
+                        //constructor sets new cell as prevCell's next
+                        WilsonCell tempCell = new WilsonCell(orderedTrail[i], prevCell);
+                        maze.Add(tempCell);
+                        prevCell = tempCell;
+                    }
+                    else {
+                        //first cell in trail doesn't have a next
+                        maze.Add(prevCell);
+                    }
+                }
                 trail.Clear();
+                orderedTrail.Clear();
                 if(debugLog) print(trailHead.ToString() + " Trail added to maze.");
                 gameObject.BroadcastMessage("RefreshMaze");
                 stopAuto = true;
@@ -174,6 +195,7 @@ public class WilsonMaze : MonoBehaviour {
             }
             if(debugLog) print(trailHead);
             trail.Add(trailHead);
+            orderedTrail.Add(trailHead);
         }
         //update UI representation of trail and move indicators
         gameObject.BroadcastMessage("RefreshTrail");
@@ -185,16 +207,18 @@ public class WilsonCell {
     public Vector2Int vec;
     public WilsonCell next;
 
-    WilsonCell(Vector2Int v) {
+    public WilsonCell(Vector2Int v) {
         vec = v;
     }
-    WilsonCell(Vector2 v) {
-        vec = new Vector2Int((int)v.x, (int)v.y);
+    public WilsonCell(Vector2Int v, WilsonCell cell) {
+        vec = v;
+        cell.next = this;
     }
-    WilsonCell(int x, int y) {
+    public WilsonCell(int x, int y) {
         vec = new Vector2Int(x,y);
     }
-    WilsonCell(float x, float y) {
-        vec = new Vector2Int((int)x, (int)y);
+    public WilsonCell(int x, int y, WilsonCell cell) {
+        vec = new Vector2Int(x,y);
+        cell.next = this;
     }
 }

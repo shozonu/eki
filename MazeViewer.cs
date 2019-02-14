@@ -54,36 +54,30 @@ public class MazeViewer : MonoBehaviour {
 
     void RefreshMaze() {
         //instantiates blank square images to represent the current maze.
-        //copies all maze cells to array and instantiates them iteratively.
         //instantiates only cells that have not already been instantiated.
-        Vector2Int [] cells = new Vector2Int[MazeObject.maze.Count];
-        MazeObject.maze.CopyTo(cells);
-        foreach(Vector2Int c in cells) {
-            if(!UIMaze.Contains(c)) {
-                UIMaze.Add(c);
+        foreach(WilsonCell c in MazeObject.maze) {
+            if(!UIMaze.Contains(c.vec)) {
+                UIMaze.Add(c.vec);
                 GameObject newCell = Instantiate(whiteCell, this.gameObject.transform);
                 RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
                 newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
                 newCellTrans.anchoredPosition =
-                    new Vector2((pixelOffsetFromLeft + ((c.x - 1) * pixelCellWidth)),
-                                pixelOffsetFromBottom + ((c.y - 1) * pixelCellWidth));
-                newCell.name = c.ToString();
+                    new Vector2((pixelOffsetFromLeft + ((c.vec.x - 1) * pixelCellWidth)),
+                                pixelOffsetFromBottom + ((c.vec.y - 1) * pixelCellWidth));
+                newCell.name = c.vec.ToString();
             }
         }
     }
 
     void RefreshTrail() {
         //instantiates green square images to represent current trail.
-        //copies trail cells to array and instantiates them.
         //since trail may have been erased during generation,
         //all trail cell sprites must be destroyed before instantiating the updated trail.
-        Vector2Int [] cells = new Vector2Int[MazeObject.trail.Count];
-        MazeObject.trail.CopyTo(cells);
         foreach(GameObject go in UITrail) {
             Destroy(go);
         }
         UITrail.Clear();
-        foreach(Vector2Int c in cells) {
+        foreach(Vector2Int c in MazeObject.trail) {
             GameObject newCell;
             //different cell color for current head and previous head cells
             if(c == MazeObject.trailHead) {
