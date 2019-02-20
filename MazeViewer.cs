@@ -5,12 +5,7 @@ using UnityEngine.UI;
 
 public class MazeViewer : MonoBehaviour {
     public WilsonMaze MazeObject;
-    public GameObject whiteCell;
-    public GameObject greenCell;
-    public GameObject redCell;
-    public GameObject orangeCell;
-    public GameObject purpleMiniCell;
-    public GameObject pinkMiniFadeCell;
+    public GameObject UIRect;
     HashSet<Vector2Int> UIMaze;
     List<GameObject> UITrail;
     List<GameObject> UIMovesIndicator;
@@ -58,7 +53,7 @@ public class MazeViewer : MonoBehaviour {
         foreach(WilsonCell c in MazeObject.maze) {
             if(!UIMaze.Contains(c.vec)) {
                 UIMaze.Add(c.vec);
-                GameObject newCell = Instantiate(whiteCell, this.gameObject.transform);
+                GameObject newCell = Instantiate(UIRect, this.gameObject.transform);
                 RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
                 newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
                 newCellTrans.anchoredPosition =
@@ -81,13 +76,16 @@ public class MazeViewer : MonoBehaviour {
             GameObject newCell;
             //different cell color for current head and previous head cells
             if(c == MazeObject.trailHead) {
-                newCell = Instantiate(redCell, this.gameObject.transform);
+                newCell = Instantiate(UIRect, this.gameObject.transform);
+                newCell.GetComponent<Graphic>().color = Color.red;
             }
             else if(c == MazeObject.trailHeadPrev) {
-                newCell = Instantiate(orangeCell, this.gameObject.transform);
+                newCell = Instantiate(UIRect, this.gameObject.transform);
+                newCell.GetComponent<Graphic>().color = new Color(1f, 0.5f, 0f, 1f);
             }
             else {
-                newCell = Instantiate(greenCell, this.gameObject.transform);
+                newCell = Instantiate(UIRect, this.gameObject.transform);
+                newCell.GetComponent<Graphic>().color = new Color(0.4f, 1f, 0.4f, 1f);
             }
             RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
             newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
@@ -106,7 +104,21 @@ public class MazeViewer : MonoBehaviour {
             Destroy(go);
         }
         foreach(Vector2Int v in MazeObject.moves) {
-            GameObject indi = Instantiate(purpleMiniCell, this.gameObject.transform);
+            GameObject indi = Instantiate(UIRect, this.gameObject.transform);
+            indi.GetComponent<Graphic>().color = new Color(0.8f, 0.2f, 0.8f, 1f);
+            RectTransform newCellTrans = indi.GetComponent<RectTransform>();
+            newCellTrans.sizeDelta = new Vector2(pixelCellWidth * 0.5f, pixelCellWidth * 0.5f);
+            indi.GetComponent<RectTransform>().anchoredPosition =
+                new Vector2((pixelOffsetFromLeft + ((v.x - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F)),
+                            pixelOffsetFromBottom + ((v.y - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F));
+            indi.name = "[Potential Move] " + v.ToString();
+            UIMovesIndicator.Add(indi);
+        }
+    }
+
+    void RefreshTrack() {
+        foreach(Vector2Int v in MazeObject.orderedTrail) {
+            GameObject indi = Instantiate(UIRect, this.gameObject.transform);
             RectTransform newCellTrans = indi.GetComponent<RectTransform>();
             newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
             indi.GetComponent<RectTransform>().anchoredPosition =
@@ -128,9 +140,10 @@ public class MazeViewer : MonoBehaviour {
         }
         UIEmptyIndicator.Clear();
         foreach(Vector2Int c in cells) {
-            GameObject newCell = Instantiate(pinkMiniFadeCell, this.gameObject.transform);
+            GameObject newCell = Instantiate(UIRect, this.gameObject.transform);
+            newCell.GetComponent<Graphic>().color = new Color(1f, 0.4f, 0.6f, 0.33f);
             RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
-            newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
+            newCellTrans.sizeDelta = new Vector2(pixelCellWidth * 0.5f, pixelCellWidth * 0.5f);
             newCell.GetComponent<RectTransform>().anchoredPosition =
                 new Vector2((pixelOffsetFromLeft + ((c.x - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F)),
                             pixelOffsetFromBottom + ((c.y - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F));
