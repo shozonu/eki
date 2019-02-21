@@ -166,16 +166,34 @@ public class WilsonMaze : MonoBehaviour {
                         WilsonCell tempCell = new WilsonCell(orderedTrail[i], prevCell);
                         maze.Add(tempCell);
                         prevCell = tempCell;
+                        //link last cell in trail to maze
+                        if(i == trail.Count - 1) {
+                            foreach(WilsonCell mc in maze) {
+                                if(mc.vec == trailHead) {
+                                    tempCell.next = mc;
+                                    break;
+                                }
+                            }
+                        }
                     }
                     else {
                         //first cell in trail doesn't have a next
                         maze.Add(prevCell);
+                        if(trail.Count == 1) {
+                            foreach(WilsonCell mc in maze) {
+                                if(mc.vec == trailHead) {
+                                    prevCell.next = mc;
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
                 trail.Clear();
                 orderedTrail.Clear();
                 if(debugLog) print(trailHead.ToString() + " Trail added to maze.");
                 gameObject.BroadcastMessage("RefreshMaze");
+                gameObject.BroadcastMessage("RefreshTrack");
                 stopAuto = true;
                 return;
             }
