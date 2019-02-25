@@ -5,10 +5,10 @@ using UnityEngine.UI;
 
 public class MazeViewer : MonoBehaviour {
     public WilsonMaze MazeObject;
-    public GameObject UIRect;
-    HashSet<Vector2Int> UIMaze;
+    public GameObject UIRect; //reference blank image for cell graphic
+    HashSet<Vector2Int> UIMaze; //hashsets for checking occupancy of vectors
     HashSet<Vector2Int> UITrack;
-    List<GameObject> UITrail;
+    List<GameObject> UITrail; //for keeping references to instantiated GameObjects
     List<GameObject> UITrackIndicator;
     List<GameObject> UIMovesIndicator;
     List<GameObject> UIEmptyIndicator;
@@ -19,41 +19,44 @@ public class MazeViewer : MonoBehaviour {
 
     void Start() {
         //if objects haven't been initialized
-        if(initFlag) {
+        if(!initFlag) {
             init();
         }
     }
-
-    // void OnGUI() {
-    //     RectTransform rectTransform = GetComponent<RectTransform>();
-    //     GUI.Label(new Rect(150, 150, 320, 480), "Rect : " + rectTransform.rect);
-    // }
 
     void Update() {
         //
     }
 
     void init() {
-        //function for initializing objects.
-        //may be necessary because other scripts may call this script before
-        //this script's Start() function is called.
+        //Function for initializing objects.
+        //May be necessary because other scripts may call this script before
+        //this script's Start() function is called,
+        // so they may call this function manually
+
+        int area = GetComponent<WilsonMaze>().sizeX * GetComponent<WilsonMaze>().sizeY;
+        //Initialize collection objects with 'area' capacity to avoid
+        //capacity resizing during runtime.
         UIMaze = new HashSet<Vector2Int>();
         UITrail = new List<GameObject>();
         UITrack = new HashSet<Vector2Int>();
         UIMovesIndicator = new List<GameObject>();
         UIEmptyIndicator = new List<GameObject>();
         UITrackIndicator = new List<GameObject>();
+        //calculate cell width depending on screen size
         pixelCellWidth =
             GetComponent<RectTransform>().rect.height /
             GetComponent<WilsonMaze>().sizeY;
+        //needs offset equal to width for some reason
         pixelOffsetFromLeft = pixelCellWidth;
         pixelOffsetFromBottom = pixelCellWidth;
         initFlag = true;
     }
 
     void RefreshMaze() {
-        //instantiates blank square images to represent the current maze.
-        //instantiates only cells that have not already been instantiated.
+        //Instantiates white squares to represent the cells occupied
+        //by the current maze.
+        //Instantiates only cells that have not already been instantiated.
         foreach(WilsonCell c in MazeObject.maze) {
             if(!UIMaze.Contains(c.vec)) {
                 UIMaze.Add(c.vec);
@@ -69,9 +72,9 @@ public class MazeViewer : MonoBehaviour {
     }
 
     void RefreshTrail() {
-        //instantiates green square images to represent current trail.
-        //since trail may have been erased during generation,
-        //all trail cell sprites must be destroyed before instantiating the updated trail.
+        //Instantiates green squares to represent cells occupied by current trail.
+        //Since trail may have been erased during generation, all trail cell
+        //sprites must be destroyed before instantiating the updated trail.
         foreach(GameObject go in UITrail) {
             Destroy(go);
         }
@@ -121,6 +124,8 @@ public class MazeViewer : MonoBehaviour {
     }
 
     void RefreshTrack() {
+        //Instantiates lines that represent the direction of each cell's
+        //link to each other.
         foreach(GameObject go in UITrackIndicator) {
             Destroy(go);
         }
@@ -159,9 +164,9 @@ public class MazeViewer : MonoBehaviour {
     }
 
     void RefreshEmpty() {
-        //instantiates sprites representing empty space
+        //Instantiates sprites representing empty space
         //called once before any other cells are created.
-        //other cells that are created are layered on top of these.
+        //Other cells that are created are layered on top of these.
         Vector2Int [] cells = new Vector2Int[MazeObject.notMaze.Count];
         MazeObject.notMaze.CopyTo(cells);
         foreach(GameObject go in UIEmptyIndicator) {
