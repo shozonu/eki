@@ -92,7 +92,7 @@ public class WilsonMaze : MonoBehaviour {
             }
         }
         if(Input.GetKeyDown(KeyCode.I)) {
-            print("# of Empty Cells: " + notMazeCount);
+            print("# of Empty Cells: " + notMaze.Count);
         }
     }
 
@@ -105,6 +105,10 @@ public class WilsonMaze : MonoBehaviour {
         //if this is the first step in the trail, choose random empty start cell
         int trailCount = trail.Count;
         int notMazeCount = notMaze.Count;
+        Vector2Int up = Vector2Int.up;
+        Vector2Int down = Vector2Int.down;
+        Vector2Int right = Vector2Int.right;
+        Vector2Int left = Vector2Int.left;
         if((trailCount < 1)) {
             Vector2Int [] arr = new Vector2Int[notMazeCount];
             notMaze.CopyTo(arr);
@@ -122,10 +126,6 @@ public class WilsonMaze : MonoBehaviour {
             //and then checked if not the immediate previously walked cell.
             int headY = trailHead.y;
             int headX = trailHead.x;
-            Vector2Int up = Vector2Int.up;
-            Vector2Int down = Vector2Int.down;
-            Vector2Int right = Vector2Int.right;
-            Vector2Int left = Vector2Int.left;
             moves.Clear();
             if(!(headY + 1 > sizeY - 1)) {
                 if(!(trailHead + up == trailHeadPrev)) {
@@ -156,6 +156,8 @@ public class WilsonMaze : MonoBehaviour {
             trailHead = moves[Random.Range(0,moves.Count)];
             //if new head is part of current trail, erase the trail
             //TO DO: change so that it only erased trail up to point where loop was created
+            int headY = trailHead.y;
+            int headX = trailHead.x;
             if(trail.Contains(trailHead)) {
                 trail.Clear();
                 orderedTrail.Clear();
