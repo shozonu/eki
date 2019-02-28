@@ -59,23 +59,24 @@ public class WilsonMaze : MonoBehaviour {
     }
 
     void Update() {
+        int mazeCount = maze.Count;
         //stops auto maze generation every time maze is expanded (if option is enabled)
         if((pauseAtSuccessfulTrail == true) && (stopAuto == true) && (IsInvoking("AutoStep"))) {
             CancelInvoke();
         }
         //automatically stops generation when number of cells in maze reach certain density
-        if(IsInvoking("AutoStep") && ((maze.Count / maxCells)>= cellDensity)) {
+        if(IsInvoking("AutoStep") && ((mazeCount / maxCells)>= cellDensity)) {
             stopAuto = true;
             CancelInvoke();
-            print("Minimum Cell Density Reached: " + maze.Count + " cells ("
-            + (100*(maze.Count / maxCells)) + "%)");
+            print("Minimum Cell Density Reached: " + mazeCount + " cells ("
+            + (100*(mazeCount / maxCells)) + "%)");
         }
         //'G' for 'Generate'
         if(Input.GetKeyDown(KeyCode.G)) {
             //if already at desired density, do not generate any further
-            if(maze.Count >= (maxCells * cellDensity)) {
-                print("Minimum Cell Density Reached: " + maze.Count + " cells ("
-                + (100*(maze.Count / maxCells)) + "%)");
+            if(mazeCount >= (maxCells * cellDensity)) {
+                print("Minimum Cell Density Reached: " + mazeCount + " cells ("
+                + (100*(mazeCount / maxCells)) + "%)");
             }
             //stops auto generation if it is currently going
             else if(IsInvoking("AutoStep")) {
@@ -91,7 +92,7 @@ public class WilsonMaze : MonoBehaviour {
             }
         }
         if(Input.GetKeyDown(KeyCode.I)) {
-            print("# of Empty Cells: " + notMaze.Count);
+            print("# of Empty Cells: " + notMazeCount);
         }
     }
 
@@ -102,8 +103,10 @@ public class WilsonMaze : MonoBehaviour {
     }
     void WilsonStep() {
         //if this is the first step in the trail, choose random empty start cell
-        if((trail.Count < 1)) {
-            Vector2Int [] arr = new Vector2Int[notMaze.Count];
+        int trailCount = trail.Count;
+        int notMazeCount = notMaze.Count;
+        if((trailCount < 1)) {
+            Vector2Int [] arr = new Vector2Int[notMazeCount];
             notMaze.CopyTo(arr);
             trailHead = arr[Random.Range(0, arr.Length - 1)];
             trailHeadPrev = trailHead;
@@ -117,25 +120,31 @@ public class WilsonMaze : MonoBehaviour {
             //each move is the Vector2Int of a valid cell adjacent to the head.
             //potential move is checked against maze bounds,
             //and then checked if not the immediate previously walked cell.
+            int headY = trailHead.y;
+            int headX = trailHead.x;
+            Vector2Int up = Vector2Int.up;
+            Vector2Int down = Vector2Int.down;
+            Vector2Int right = Vector2Int.right;
+            Vector2Int left = Vector2Int.left;
             moves.Clear();
-            if(!(trailHead.y + 1 > sizeY - 1)) {
-                if(!(trailHead + Vector2Int.up == trailHeadPrev)) {
-                    moves.Add(trailHead + Vector2Int.up);
+            if(!(headY + 1 > sizeY - 1)) {
+                if(!(trailHead + up == trailHeadPrev)) {
+                    moves.Add(trailHead + up);
                 }
             }
-            if(!(trailHead.y - 1 < 0)) {
-                if(!(trailHead + Vector2Int.down == trailHeadPrev)) {
-                    moves.Add(trailHead + Vector2Int.down);
+            if(!(headY - 1 < 0)) {
+                if(!(trailHead + down == trailHeadPrev)) {
+                    moves.Add(trailHead + down);
                 }
             }
-            if(!(trailHead.x + 1 > sizeX - 1)) {
-                if(!(trailHead + Vector2Int.right == trailHeadPrev)) {
-                    moves.Add(trailHead + Vector2Int.right);
+            if(!(headX + 1 > sizeX - 1)) {
+                if(!(trailHead + right == trailHeadPrev)) {
+                    moves.Add(trailHead + right);
                 }
             }
-            if(!(trailHead.x - 1 < 0)) {
-                if(!(trailHead + Vector2Int.left == trailHeadPrev)) {
-                    moves.Add(trailHead + Vector2Int.left);
+            if(!(headX - 1 < 0)) {
+                if(!(trailHead + left == trailHeadPrev)) {
+                    moves.Add(trailHead + left);
                 }
             }
         }
@@ -160,14 +169,14 @@ public class WilsonMaze : MonoBehaviour {
                 mazeCoords.UnionWith(trail); //add trail to mazeCoords
                 WilsonCell prevCell = new WilsonCell(orderedTrail[0]);
                 //add cells to maze from trail, and forward-link cells
-                for(int i = 0; i < trail.Count; i++) {
+                for(int i = 0; i < trailCount; i++) {
                     if(i > 0) {
                         //constructor sets new cell as prevCell's next
                         WilsonCell tempCell = new WilsonCell(orderedTrail[i], prevCell);
                         maze.Add(tempCell);
                         prevCell = tempCell;
                         //link last cell in trail to maze
-                        if(i == trail.Count - 1) {
+                        if(i == trailCount - 1) {
                             foreach(WilsonCell mc in maze) {
                                 if(mc.vec == trailHead) {
                                     tempCell.next = mc;
@@ -179,7 +188,7 @@ public class WilsonMaze : MonoBehaviour {
                     else {
                         //first cell in trail doesn't have a next
                         maze.Add(prevCell);
-                        if(trail.Count == 1) {
+                        if(trailCount == 1) {
                             foreach(WilsonCell mc in maze) {
                                 if(mc.vec == trailHead) {
                                     prevCell.next = mc;
@@ -199,17 +208,17 @@ public class WilsonMaze : MonoBehaviour {
             }
             //calculate next set of move
             moves.Clear();
-            if(!(trailHead.y + 1 > sizeY - 1)&&(trailHead + Vector2Int.up != trailHeadPrev)) {
-                moves.Add(trailHead + Vector2Int.up);
+            if(!(headY + 1 > sizeY - 1)&&(trailHead + up != trailHeadPrev)) {
+                moves.Add(trailHead + up);
             }
-            if(!(trailHead.y - 1 < 0)&&(trailHead + Vector2Int.down != trailHeadPrev)) {
-                moves.Add(trailHead + Vector2Int.down);
+            if(!(headY - 1 < 0)&&(trailHead + down != trailHeadPrev)) {
+                moves.Add(trailHead + down);
             }
-            if(!(trailHead.x + 1 > sizeX - 1)&&(trailHead + Vector2Int.right != trailHeadPrev)) {
-                moves.Add(trailHead + Vector2Int.right);
+            if(!(headX + 1 > sizeX - 1)&&(trailHead + right != trailHeadPrev)) {
+                moves.Add(trailHead + right);
             }
-            if(!(trailHead.x - 1 < 0)&&(trailHead + Vector2Int.left != trailHeadPrev)) {
-                moves.Add(trailHead + Vector2Int.left);
+            if(!(headX - 1 < 0)&&(trailHead + left != trailHeadPrev)) {
+                moves.Add(trailHead + left);
             }
             if(debugLog) print(trailHead);
             trail.Add(trailHead);
