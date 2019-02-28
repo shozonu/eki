@@ -58,15 +58,18 @@ public class MazeViewer : MonoBehaviour {
         //by the current maze.
         //Instantiates only cells that have not already been instantiated.
         foreach(WilsonCell c in MazeObject.maze) {
-            if(!UIMaze.Contains(c.vec)) {
-                UIMaze.Add(c.vec);
+            Vector2Int vec = c.vec;
+            if(!UIMaze.Contains(vec)) {
+                UIMaze.Add(vec);
                 GameObject newCell = Instantiate(UIRect, this.gameObject.transform);
                 RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
+                //set size of cell in pixels
                 newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
+                //cell anchor is bottom left corner of rectangle
                 newCellTrans.anchoredPosition =
-                    new Vector2((pixelOffsetFromLeft + ((c.vec.x - 1) * pixelCellWidth)),
-                                pixelOffsetFromBottom + ((c.vec.y - 1) * pixelCellWidth));
-                newCell.name = c.vec.ToString();
+                    new Vector2((pixelOffsetFromLeft + ((vec.x - 1) * pixelCellWidth)),
+                                pixelOffsetFromBottom + ((vec.y - 1) * pixelCellWidth));
+                newCell.name = vec.ToString();
             }
         }
     }
@@ -79,24 +82,26 @@ public class MazeViewer : MonoBehaviour {
             Destroy(go);
         }
         UITrail.Clear();
+        Transform trfm = this.gameObject.transform;
         foreach(Vector2Int c in MazeObject.trail) {
             GameObject newCell;
+            newCell = Instantiate(UIRect,trfm);
             //different cell color for current head and previous head cells
             if(c == MazeObject.trailHead) {
-                newCell = Instantiate(UIRect, this.gameObject.transform);
-                newCell.GetComponent<Graphic>().color = Color.red;
+                newCell.GetComponent<Graphic>().color = new Color(1f, 0f, 0f, 1f);
+                //red for current trail head
             }
             else if(c == MazeObject.trailHeadPrev) {
-                newCell = Instantiate(UIRect, this.gameObject.transform);
                 newCell.GetComponent<Graphic>().color = new Color(1f, 0.5f, 0f, 1f);
+                //orange for last trail head
             }
             else {
-                newCell = Instantiate(UIRect, this.gameObject.transform);
                 newCell.GetComponent<Graphic>().color = new Color(0.4f, 1f, 0.4f, 1f);
+                //green for trail cells
             }
             RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
             newCellTrans.sizeDelta = new Vector2(pixelCellWidth, pixelCellWidth);
-            newCell.GetComponent<RectTransform>().anchoredPosition =
+            newCellTrans.anchoredPosition =
                 new Vector2((pixelOffsetFromLeft + ((c.x - 1) * pixelCellWidth)),
                             pixelOffsetFromBottom + ((c.y - 1) * pixelCellWidth));
             newCell.name = c.ToString() + " (Trail)";
@@ -113,9 +118,10 @@ public class MazeViewer : MonoBehaviour {
         foreach(Vector2Int v in MazeObject.moves) {
             GameObject indi = Instantiate(UIRect, this.gameObject.transform);
             indi.GetComponent<Graphic>().color = new Color(0.8f, 0.2f, 0.8f, 1f);
+            //purple colored
             RectTransform newCellTrans = indi.GetComponent<RectTransform>();
             newCellTrans.sizeDelta = new Vector2(pixelCellWidth * 0.5f, pixelCellWidth * 0.5f);
-            indi.GetComponent<RectTransform>().anchoredPosition =
+            newCellTrans.anchoredPosition =
                 new Vector2((pixelOffsetFromLeft + ((v.x - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F)),
                             pixelOffsetFromBottom + ((v.y - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F));
             indi.name = "[Potential Move] " + v.ToString();
@@ -130,21 +136,26 @@ public class MazeViewer : MonoBehaviour {
             Destroy(go);
         }
         UITrack.Clear();
+        Transform thisTsfm = this.gameObject.transform;
         foreach(WilsonCell c in MazeObject.maze) {
             if(c.next != null) {
-                GameObject track = Instantiate(UIRect, this.gameObject.transform);
-                track.GetComponent<Graphic>().color = Color.red;
+                GameObject track = Instantiate(UIRect, thisTsfm);
+                track.GetComponent<Graphic>().color = new Color(1f, 0f, 0f, 1f);
+                //color track line is red
                 RectTransform newCellTrans = track.GetComponent<RectTransform>();
+                WilsonCell nxt = c.next;
+                Vector2Int nxtVec = c.next.vec;
+                Vector2Int vec = c.vec;
                 int xtra = 1;
                 int ytra = 1; //anchor offset depending on direction of indicator
-                if(c.next.vec - c.vec == Vector2Int.up) {
+                if(nxtVec - vec == Vector2Int.up) {
                     newCellTrans.sizeDelta = new Vector2(pixelCellWidth * 0.5F, pixelCellWidth * 1.5F);
                 }
-                else if(c.next.vec - c.vec == Vector2Int.down) {
+                else if(nxtVec - vec == Vector2Int.down) {
                     newCellTrans.sizeDelta = new Vector2(pixelCellWidth * 0.5F, pixelCellWidth * 1.5F);
                     ytra = 2;
                 }
-                else if(c.next.vec - c.vec == Vector2Int.right) {
+                else if(nxtVec - vec == Vector2Int.right) {
                     newCellTrans.sizeDelta = new Vector2(pixelCellWidth * 1.5F, pixelCellWidth * 0.5F);
                 }
                 else {
@@ -152,13 +163,13 @@ public class MazeViewer : MonoBehaviour {
                     xtra = 2;
                 }
                 //setting anchor position using offset xtra and ytra
-                track.GetComponent<RectTransform>().anchoredPosition =
-                new Vector2((pixelOffsetFromLeft + ((c.vec.x - xtra) * pixelCellWidth) + (pixelCellWidth * 0.25F)),
-                pixelOffsetFromBottom + ((c.vec.y - ytra) * pixelCellWidth) + (pixelCellWidth * 0.25F));
+                newCellTrans.anchoredPosition =
+                new Vector2((pixelOffsetFromLeft + ((vec.x - xtra) * pixelCellWidth) + (pixelCellWidth * 0.25F)),
+                pixelOffsetFromBottom + ((vec.y - ytra) * pixelCellWidth) + (pixelCellWidth * 0.25F));
 
-                track.name = "[Line] " + c.vec.ToString() + " -> " + c.next.vec.ToString();
+                track.name = "[Line] " + vec.ToString() + " -> " + nxtVec.ToString();
                 UITrackIndicator.Add(track);
-                UITrack.Add(c.vec);
+                UITrack.Add(vec);
             }
         }
     }
@@ -176,9 +187,10 @@ public class MazeViewer : MonoBehaviour {
         foreach(Vector2Int c in cells) {
             GameObject newCell = Instantiate(UIRect, this.gameObject.transform);
             newCell.GetComponent<Graphic>().color = new Color(1f, 0.4f, 0.6f, 0.33f);
+            //empty cell is transparent red
             RectTransform newCellTrans = newCell.GetComponent<RectTransform>();
             newCellTrans.sizeDelta = new Vector2(pixelCellWidth * 0.5f, pixelCellWidth * 0.5f);
-            newCell.GetComponent<RectTransform>().anchoredPosition =
+            newCellTrans.anchoredPosition =
                 new Vector2((pixelOffsetFromLeft + ((c.x - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F)),
                             pixelOffsetFromBottom + ((c.y - 1) * pixelCellWidth) + (pixelCellWidth * 0.25F));
             newCell.name = "[Empty] " + c.ToString();
