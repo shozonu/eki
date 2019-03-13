@@ -147,6 +147,7 @@ public class WilsonMaze : MonoBehaviour {
                     moves.Add(trailHead + left);
                 }
             }
+            return;
         }
         //if not the first step
         else {
@@ -154,16 +155,34 @@ public class WilsonMaze : MonoBehaviour {
             //and select new trailHead from list of valid moves
             trailHeadPrev = trailHead;
             trailHead = moves[Random.Range(0,moves.Count)];
-            //if new head is part of current trail, erase the trail
-            //TO DO: change so that it only erased trail up to point where loop was created
             int headY = trailHead.y;
             int headX = trailHead.x;
+            //if new head is part of current trail,
+            //erase the trail following the overlap
             if(trail.Contains(trailHead)) {
-                trail.Clear();
-                orderedTrail.Clear();
+                int cutoff = 0;
+                for(int i = 0; i < trailCount; i++) {
+                    //find index of overlapping cell and store in cutoff,
+                    //update trailHeadPrev to cell behind overlap
+                    if(orderedTrail[i] == trailHead) {
+                        cutoff = i;
+                        if(i > 0) {
+                            trailHeadPrev = orderedTrail[i - 1];
+                        }
+                        else {
+                            trailHeadPrev = orderedTrail[i];
+                        }
+                        break;
+                    }
+                }
+                for(int i = cutoff + 1; i < trailCount; i++) {
+                    trail.Remove(orderedTrail[i]);
+                }
+                //second argument represents number of elements to remove after cutoff
+                orderedTrail.RemoveRange(cutoff, trailCount - cutoff);
+
                 if(debugLog) print(trailHead.ToString() + " Loop Erased.");
                 stopAuto = false;
-                return;
             }
             //if new head is part of existing maze, add trail to maze
             else if(mazeCoords.Contains(trailHead)) {
@@ -205,6 +224,8 @@ public class WilsonMaze : MonoBehaviour {
                 if(debugLog) print(trailHead.ToString() + " Trail added to maze.");
                 gameObject.BroadcastMessage("RefreshMaze");
                 gameObject.BroadcastMessage("RefreshTrack");
+                gameObject.BroadcastMessage("RefreshTrail");
+                gameObject.BroadcastMessage("RefreshMoves");
                 stopAuto = true;
                 return;
             }
