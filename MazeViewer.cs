@@ -4,7 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class MazeViewer : MonoBehaviour {
-    public WilsonMaze MazeObject;
+    private WilsonMaze MazeObject;
+    public bool initFlag;
     public GameObject UIRect; //reference blank image for cell graphic
     HashSet<Vector2Int> UIMaze; //hashsets for checking occupancy of vectors
     HashSet<Vector2Int> UITrack;
@@ -15,7 +16,6 @@ public class MazeViewer : MonoBehaviour {
     float pixelCellWidth;
     float pixelOffsetFromLeft;
     float pixelOffsetFromBottom;
-    bool initFlag;
 
     void Start() {
         //if objects haven't been initialized
@@ -28,13 +28,13 @@ public class MazeViewer : MonoBehaviour {
         //
     }
 
-    void init() {
+    public void init() {
         //Function for initializing objects.
         //May be necessary because other scripts may call this script before
         //this script's Start() function is called,
         // so they may call this function manually
-
-        int area = GetComponent<WilsonMaze>().sizeX * GetComponent<WilsonMaze>().sizeY;
+        MazeObject = GetComponent<WilsonMaze>();
+        int area = MazeObject.sizeX * MazeObject.sizeY;
         //Initialize collection objects with 'area' capacity to avoid
         //capacity resizing during runtime.
         UIMaze = new HashSet<Vector2Int>();
@@ -46,14 +46,14 @@ public class MazeViewer : MonoBehaviour {
         //calculate cell width depending on screen size
         pixelCellWidth =
             GetComponent<RectTransform>().rect.height /
-            GetComponent<WilsonMaze>().sizeY;
+            MazeObject.sizeY;
         //needs offset equal to width for some reason
         pixelOffsetFromLeft = pixelCellWidth;
         pixelOffsetFromBottom = pixelCellWidth;
         initFlag = true;
     }
 
-    void RefreshMaze() {
+    public void RefreshMaze() {
         //Instantiates white squares to represent the cells occupied
         //by the current maze.
         //Instantiates only cells that have not already been instantiated.
@@ -74,7 +74,7 @@ public class MazeViewer : MonoBehaviour {
         }
     }
 
-    void RefreshTrail() {
+    public void RefreshTrail() {
         //Instantiates green squares to represent cells occupied by current trail.
         //Since trail may have been erased during generation, all trail cell
         //sprites must be destroyed before instantiating the updated trail.
@@ -109,7 +109,7 @@ public class MazeViewer : MonoBehaviour {
         }
     }
 
-    void RefreshMoves() {
+    public void RefreshMoves() {
         //sprites for representing the current valid cells for next move.
         //current instances are destroyed before instantiating updated sprites
         foreach(GameObject go in UIMovesIndicator) {
@@ -129,7 +129,7 @@ public class MazeViewer : MonoBehaviour {
         }
     }
 
-    void RefreshTrack() {
+    public void RefreshTrack() {
         //Instantiates lines that represent the direction of each cell's
         //link to each other.
         foreach(GameObject go in UITrackIndicator) {
@@ -174,7 +174,7 @@ public class MazeViewer : MonoBehaviour {
         }
     }
 
-    void RefreshEmpty() {
+    public void RefreshEmpty() {
         //Instantiates sprites representing empty space
         //called once before any other cells are created.
         //Other cells that are created are layered on top of these.

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class WilsonMaze : MonoBehaviour {
+    public MazeViewer viewer;
+    public bool initFlag;
     public bool debugLog;
     public bool pauseAtSuccessfulTrail;
     public int seed;
@@ -20,13 +22,18 @@ public class WilsonMaze : MonoBehaviour {
     public Vector2Int trailHeadPrev; //keep track of last vector in step
     public List<Vector2Int> moves; //list of valid adjacent vectors in step
     float maxCells;
-    //when adding a trail to the maze,
-    //use notMaze.ExceptWith(trail) to remove walked cells from notMaze
-    //use maze.UnionWith(trail) add trail to maze
-    //then trail.Clear()
 
     void Start() {
-        gameObject.BroadcastMessage("init"); //ensure MazeViewer objects are initialized
+        if(!initFlag) {
+            init();
+        }
+    }
+
+    public void init() {
+        viewer = gameObject.GetComponent<MazeViewer>();
+        //ensure MazeViewer objects are initialized
+        if(!viewer.initFlag) viewer.init();
+
         maze = new HashSet<WilsonCell>();
         mazeCoords = new HashSet<Vector2Int>();
         notMaze = new HashSet<Vector2Int>();
@@ -44,7 +51,7 @@ public class WilsonMaze : MonoBehaviour {
             }
         }
         //instantiate UI representations of empty cells
-        gameObject.BroadcastMessage("RefreshEmpty");
+        viewer.RefreshEmpty();
 
         //initialize maze with one cell
         if(maze.Count < 1) {
@@ -54,8 +61,9 @@ public class WilsonMaze : MonoBehaviour {
             mazeCoords.Add(initial);
             notMaze.Remove(initial);
             //update UI representation of maze
-        gameObject.BroadcastMessage("RefreshMaze");
+            viewer.RefreshMaze();
         }
+        initFlag = true;
     }
 
     void Update() {
@@ -222,10 +230,10 @@ public class WilsonMaze : MonoBehaviour {
                 trail.Clear();
                 orderedTrail.Clear();
                 if(debugLog) print(trailHead.ToString() + " Trail added to maze.");
-                gameObject.BroadcastMessage("RefreshMaze");
-                gameObject.BroadcastMessage("RefreshTrack");
-                gameObject.BroadcastMessage("RefreshTrail");
-                gameObject.BroadcastMessage("RefreshMoves");
+                viewer.RefreshMaze();
+                viewer.RefreshTrack();
+                viewer.RefreshTrail();
+                viewer.RefreshMoves();
                 stopAuto = true;
                 return;
             }
@@ -248,8 +256,8 @@ public class WilsonMaze : MonoBehaviour {
             orderedTrail.Add(trailHead);
         }
         //update UI representation of trail and move indicators
-        gameObject.BroadcastMessage("RefreshTrail");
-        gameObject.BroadcastMessage("RefreshMoves");
+        viewer.RefreshTrail();
+        viewer.RefreshMoves();
     }
 }
 
