@@ -4,15 +4,17 @@ using UnityEngine;
 
 public class WilsonMaze : MonoBehaviour {
     public MazeViewer viewer;
-    public bool initFlag;
-    public bool debugLog;
-    public bool pauseAtSuccessfulTrail;
+    public bool silentMode;
     public int seed;
     public int sizeX;
     public int sizeY;
     public float cellDensity;
+    public int maxIterations;
     public float autoStepInterval;
+    public bool pauseAtSuccessfulTrail;
     public bool stopAuto;
+    public bool initFlag;
+    public bool debugLog;
     public HashSet<Vector2Int> mazeCoords; //for checking occupancy of vectors
     public HashSet<WilsonCell> maze; //keeping references of objects
     public HashSet<Vector2Int> notMaze; //for checking occupancy of non-used vecs
@@ -22,6 +24,9 @@ public class WilsonMaze : MonoBehaviour {
     public Vector2Int trailHeadPrev; //keep track of last vector in step
     public List<Vector2Int> moves; //list of valid adjacent vectors in step
     float maxCells;
+    int mazeCount;
+    int targetCells;
+    int iterations;
 
     void Start() {
         if(!initFlag) {
@@ -42,8 +47,11 @@ public class WilsonMaze : MonoBehaviour {
         moves = new List<Vector2Int>();
         Random.InitState(seed);
 
+        mazeCount = maze.Count;
+        iterations = 0;
         stopAuto = false;
         maxCells = sizeX * sizeY;
+        targetCells = (int)(maxCells * cellDensity);
         //populate notMaze with all cells
         for(int x = 0; x < sizeX; x++) {
             for(int y = 0; y < sizeY; y++) {
@@ -54,7 +62,7 @@ public class WilsonMaze : MonoBehaviour {
         viewer.RefreshEmpty();
 
         //initialize maze with one cell
-        if(maze.Count < 1) {
+        if(mazeCount < 1) {
             Vector2Int initial =
                 new Vector2Int(Random.Range(0,sizeX - 1), Random.Range(0,sizeY - 1));
             maze.Add(new WilsonCell(initial));
@@ -67,13 +75,13 @@ public class WilsonMaze : MonoBehaviour {
     }
 
     void Update() {
-        int mazeCount = maze.Count;
+        mazeCount = maze.Count;
         //stops auto maze generation every time maze is expanded (if option is enabled)
-        if((pauseAtSuccessfulTrail == true) && (stopAuto == true) && (IsInvoking("AutoStep"))) {
+        if((pauseAtSuccessfulTrail == true) && (stopAuto == true) && (IsInvoking("WilsonStep"))) {
             CancelInvoke();
         }
         //automatically stops generation when number of cells in maze reach certain density
-        if(IsInvoking("AutoStep") && ((mazeCount / maxCells)>= cellDensity)) {
+        if(IsInvoking("WilsonStep") && (mazeCount >= targetCells)) {
             stopAuto = true;
             CancelInvoke();
             print("Minimum Cell Density Reached: " + mazeCount + " cells ("
@@ -81,35 +89,57 @@ public class WilsonMaze : MonoBehaviour {
         }
         //'G' for 'Generate'
         if(Input.GetKeyDown(KeyCode.G)) {
+            if(iterations >= maxIterations) {
+                print("Maximum Iterations Reached: " + iterations + "/" + maxIterations);
+            }
             //if already at desired density, do not generate any further
-            if(mazeCount >= (maxCells * cellDensity)) {
+            else if(mazeCount >= targetCells) {
                 print("Minimum Cell Density Reached: " + mazeCount + " cells ("
                 + (100*(mazeCount / maxCells)) + "%)");
             }
-            //stops auto generation if it is currently going
-            else if(IsInvoking("AutoStep")) {
-                CancelInvoke();
-                stopAuto = true;
-                print("Autostep Paused");
+            else if(silentMode) {
+                SilentStep();
             }
-            //starts auto generation if currently stopped
             else {
-                InvokeRepeating("AutoStep", autoStepInterval, autoStepInterval);
-                stopAuto = false;
-                print("Autostep Resumed");
+                //stops auto generation if it is currently going
+                if(IsInvoking("WilsonStep")) {
+                    CancelInvoke();
+                    stopAuto = true;
+                    print("Generation Paused");
+                }
+                //starts auto generation if currently stopped
+                else {
+                    InvokeRepeating("WilsonStep", autoStepInterval, autoStepInterval);
+                    stopAuto = false;
+                    print("Generation Resumed");
+                }
             }
         }
         if(Input.GetKeyDown(KeyCode.I)) {
-            print("# of Empty Cells: " + notMaze.Count);
+            print("Iterations: " + iterations + "/" + maxIterations);
         }
     }
 
-    void AutoStep() {
-        //step function wrapped in AutoStep,
-        //in case additional functions need to be called
-        WilsonStep();
+    void SilentStep() {
+        while(iterations < maxIterations - 1) {
+            mazeCount = maze.Count;
+            // print(iterations);
+            if(mazeCount >= (maxCells * cellDensity)) {
+                print("Minimum Cell Density Reached: " + mazeCount + " cells ("
+                + (100*(mazeCount / maxCells)) + "%)");
+                break;
+            }
+            else {
+                WilsonStep();
+            }
+        }
+        viewer.RefreshMaze();
+        viewer.RefreshTrack();
+        // viewer.RefreshTrail();
+        // viewer.RefreshMoves();
     }
     void WilsonStep() {
+        ++iterations;
         //if this is the first step in the trail, choose random empty start cell
         int trailCount = trail.Count;
         int notMazeCount = notMaze.Count;
@@ -120,7 +150,9 @@ public class WilsonMaze : MonoBehaviour {
         if((trailCount < 1)) {
             Vector2Int [] arr = new Vector2Int[notMazeCount];
             notMaze.CopyTo(arr);
-            trailHead = arr[Random.Range(0, arr.Length - 1)];
+
+            int initialRandom = Random.Range(0, arr.Length - 1);
+            trailHead = arr[initialRandom];
             trailHeadPrev = trailHead;
             trail.Add(trailHead);
             orderedTrail.Add(trailHead);
@@ -230,10 +262,12 @@ public class WilsonMaze : MonoBehaviour {
                 trail.Clear();
                 orderedTrail.Clear();
                 if(debugLog) print(trailHead.ToString() + " Trail added to maze.");
-                viewer.RefreshMaze();
-                viewer.RefreshTrack();
-                viewer.RefreshTrail();
-                viewer.RefreshMoves();
+                if(!silentMode) {
+                    viewer.RefreshMaze();
+                    viewer.RefreshTrack();
+                    viewer.RefreshTrail();
+                    viewer.RefreshMoves();
+                }
                 stopAuto = true;
                 return;
             }
@@ -256,8 +290,10 @@ public class WilsonMaze : MonoBehaviour {
             orderedTrail.Add(trailHead);
         }
         //update UI representation of trail and move indicators
-        viewer.RefreshTrail();
-        viewer.RefreshMoves();
+        if(!silentMode) {
+            viewer.RefreshTrail();
+            viewer.RefreshMoves();
+        }
     }
 }
 
